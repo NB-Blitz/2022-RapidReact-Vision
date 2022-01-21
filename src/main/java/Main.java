@@ -6,6 +6,7 @@ import edu.wpi.cscore.CvSource;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.networktables.NetworkTableInstance;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
@@ -126,7 +127,6 @@ public final class Main {
                             -1,
                             new Scalar(138, 43, 226),
                             3);
-
                     // find rectangle
                     Rect rectangle = Imgproc.boundingRect(contourBig);
                     Imgproc.rectangle(frame, rectangle.tl(), rectangle.br(), new Scalar(255, 0, 0), 1);
@@ -155,4 +155,4 @@ public final class Main {
         }
     }
 }
-// no
+//yes
