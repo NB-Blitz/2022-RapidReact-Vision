@@ -29,28 +29,43 @@ public final class Main {
 
         // NT Entries
         NetworkTable table = ntinst.getTable(TARGET_TYPE + " Auto");
-        NetworkTableEntry xEntry = table.getEntry(TARGET_TYPE + " X Value");
-        NetworkTableEntry yEntry = table.getEntry(TARGET_TYPE + " Y Value");
-        NetworkTableEntry areaEntry = table.getEntry(TARGET_TYPE + " Area");
-        NetworkTableEntry maxAreaEntry = table.getEntry(TARGET_TYPE + " Max Area");
-        NetworkTableEntry minAreaEntry = table.getEntry(TARGET_TYPE + "Min Area");
-        NetworkTableEntry rHighEntry = table.getEntry(TARGET_TYPE + " R High");
-        NetworkTableEntry gHighEntry = table.getEntry(TARGET_TYPE + " G High");
-        NetworkTableEntry bHighEntry = table.getEntry(TARGET_TYPE + " B High");
-        NetworkTableEntry rLowEntry = table.getEntry(TARGET_TYPE + " R Low");
-        NetworkTableEntry gLowEntry = table.getEntry(TARGET_TYPE + " G Low");
-        NetworkTableEntry bLowEntry = table.getEntry(TARGET_TYPE + " B Low");
+        NetworkTableEntry filterEntry = table.getEntry("Cam Filter");
+        NetworkTableEntry xEntry = table.getEntry("X Value");
+        NetworkTableEntry yEntry = table.getEntry("Y Value");
+        NetworkTableEntry areaEntry = table.getEntry("Area");
+        NetworkTableEntry maxAreaEntry = table.getEntry("Max Area");
+        NetworkTableEntry minAreaEntry = table.getEntry("Min Area");
+        NetworkTableEntry rHighEntry = table.getEntry("R High");
+        NetworkTableEntry gHighEntry = table.getEntry("G High");
+        NetworkTableEntry bHighEntry = table.getEntry("B High");
+        NetworkTableEntry rLowEntry = table.getEntry("R Low");
+        NetworkTableEntry gLowEntry = table.getEntry("G Low");
+        NetworkTableEntry bLowEntry = table.getEntry("B Low");
+
+        filterEntry.setBoolean(true);
         xEntry.setDouble(0);
         yEntry.setDouble(0);
         areaEntry.setDouble(0);
         maxAreaEntry.setDouble(20000);
         minAreaEntry.setDouble(300);
-        rHighEntry.setDouble(195);
-        gHighEntry.setDouble(80);
-        bHighEntry.setDouble(255);
-        rLowEntry.setDouble(40);
-        gLowEntry.setDouble(40);
-        bLowEntry.setDouble(160);
+
+        // Red Ball
+        /*
+         * rHighEntry.setDouble(195);
+         * gHighEntry.setDouble(80);
+         * bHighEntry.setDouble(255);
+         * rLowEntry.setDouble(40);
+         * gLowEntry.setDouble(40);
+         * bLowEntry.setDouble(160);
+         */
+
+        // Reflective Tape
+        rHighEntry.setDouble(255);
+        gHighEntry.setDouble(255);
+        bHighEntry.setDouble(220);
+        rLowEntry.setDouble(0);
+        gLowEntry.setDouble(230);
+        bLowEntry.setDouble(0);
 
         // Driver Station
         DriverStation fms = DriverStation.getInstance();
@@ -59,6 +74,7 @@ public final class Main {
         System.out.println("Connecting to " + TARGET_TYPE + " Camera...");
         UsbCamera camera = new UsbCamera("USB Camera", 0);
         camera.setResolution(640, 480);
+        camera.setExposureManual(30);
         CvSink inputStream = new CvSink("cam_sink");
         inputStream.setSource(camera);
 
@@ -73,9 +89,9 @@ public final class Main {
             if (frame.empty())
                 continue;
 
-            boolean isAuto = fms.isAutonomousEnabled();
+            boolean isFiltered = filterEntry.getBoolean(true);
 
-            if (isAuto) {
+            if (isFiltered) {
 
                 // Network Tables
                 double minArea = minAreaEntry.getDouble(300);
@@ -155,4 +171,4 @@ public final class Main {
         }
     }
 }
-//yes
+// yes
