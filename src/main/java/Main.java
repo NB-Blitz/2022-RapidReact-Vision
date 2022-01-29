@@ -84,90 +84,93 @@ public final class Main {
 
         // Loop
         for (;;) {
-            Mat frame = new Mat();
-            inputStream.grabFrame(frame);
-            if (frame.empty())
+
+            // Grab Frame
+            Mat coloredFrame = new Mat();
+            Mat filteredFrame = new Mat();
+            inputStream.grabFrame(coloredFrame);
+            if (coloredFrame.empty())
                 continue;
+
+            // Network Tables
+            double minArea = minAreaEntry.getDouble(300);
+            double maxArea = maxAreaEntry.getDouble(20000);
+
+            double rHigh = rHighEntry.getDouble(255);
+            double gHigh = gHighEntry.getDouble(255);
+            double bHigh = bHighEntry.getDouble(255);
+            double rLow = rLowEntry.getDouble(0);
+            double gLow = gLowEntry.getDouble(0);
+            double bLow = bLowEntry.getDouble(0);
 
             boolean isFiltered = filterEntry.getBoolean(true);
 
-            if (isFiltered) {
+            // Threshold
+            Core.inRange(
+                    coloredFrame,
+                    new Scalar(rLow, gLow, bLow),
+                    new Scalar(rHigh, gHigh, bHigh),
+                    filteredFrame);
 
-                // Network Tables
-                double minArea = minAreaEntry.getDouble(300);
-                double maxArea = maxAreaEntry.getDouble(20000);
+            // Finding Contours
+            List<MatOfPoint> contours = new ArrayList<>();
+            Imgproc.findContours(
+                    filteredFrame,
+                    contours,
+                    new Mat(),
+                    Imgproc.RETR_LIST,
+                    Imgproc.CHAIN_APPROX_SIMPLE);
 
-                double rHigh = rHighEntry.getDouble(255);
-                double gHigh = gHighEntry.getDouble(255);
-                double bHigh = bHighEntry.getDouble(255);
-                double rLow = rLowEntry.getDouble(0);
-                double gLow = gLowEntry.getDouble(0);
-                double bLow = bLowEntry.getDouble(0);
+            if (contours.size() > 0) {
 
-                // Threshold
-                Core.inRange(
-                        frame,
-                        new Scalar(rLow, gLow, bLow),
-                        new Scalar(rHigh, gHigh, bHigh),
-                        frame);
-
-                // Finding Contours
-                List<MatOfPoint> contours = new ArrayList<>();
-                Imgproc.findContours(
-                        frame,
-                        contours,
-                        new Mat(),
-                        Imgproc.RETR_LIST,
-                        Imgproc.CHAIN_APPROX_SIMPLE);
-
-                if (contours.size() > 0) {
-
-                    // Getting the Thicc-est Contour
-                    double areaBig = 0;
-                    MatOfPoint contourBig = contours.get(0);
-                    for (int i = 0; i < contours.size(); i++) {
-                        double area = Imgproc.contourArea(contours.get(i));
-                        if (areaBig < area && area > minArea && area < maxArea) {
-                            areaBig = area;
-                            contourBig = contours.get(i);
-                        }
+                // Getting the Thicc-est Contour
+                double areaBig = 0;
+                MatOfPoint contourBig = contours.get(0);
+                for (int i = 0; i < contours.size(); i++) {
+                    double area = Imgproc.contourArea(contours.get(i));
+                    if (areaBig < area && area > minArea && area < maxArea) {
+                        areaBig = area;
+                        contourBig = contours.get(i);
                     }
-
-                    // Draw the Thicc-est Contour
-                    areaEntry.setDouble(areaBig);
-                    List<MatOfPoint> newContours = new ArrayList<>();
-                    newContours.add(contourBig);
-                    Imgproc.drawContours(
-                            frame,
-                            newContours,
-                            -1,
-                            new Scalar(138, 43, 226),
-                            3);
-                    // find rectangle
-                    Rect rectangle = Imgproc.boundingRect(contourBig);
-                    Imgproc.rectangle(frame, rectangle.tl(), rectangle.br(), new Scalar(255, 0, 0), 1);
-
-                    // find center of rectangle
-                    double x = rectangle.x + (rectangle.width / 2);
-                    double y = rectangle.y + (rectangle.height / 2);
-
-                    // place dot in center of rectangle
-                    Imgproc.circle(
-                            frame,
-                            new Point(x, y),
-                            1,
-                            new Scalar(10, 10, 10),
-                            3);
-
-                    // does good thing
-                    xEntry.setDouble(x);
-                    yEntry.setDouble(y);
                 }
+
+                // Draw the Thicc-est Contour
+                areaEntry.setDouble(areaBig);
+                List<MatOfPoint> newContours = new ArrayList<>();
+                newContours.add(contourBig);
+                Imgproc.drawContours(
+                        coloredFrame,
+                        newContours,
+                        -1,
+                        new Scalar(138, 43, 226),
+                        3);
+
+                // Find rectangle
+                Rect rectangle = Imgproc.boundingRect(contourBig);
+                Imgproc.rectangle(coloredFrame, rectangle.tl(), rectangle.br(), new Scalar(255, 0, 0), 1);
+
+                // find center of rectangle
+                double x = rectangle.x + (rectangle.width / 2);
+                double y = rectangle.y + (rectangle.height / 2);
+
+                // place dot in center of rectangle
+                Imgproc.circle(
+                        coloredFrame,
+                        new Point(x, y),
+                        1,
+                        new Scalar(10, 10, 10),
+                        3);
+
+                // does good thing
+                xEntry.setDouble(x);
+                yEntry.setDouble(y);
             }
 
             // Export Frame
-            source.putFrame(frame);
+            source.putFrame(isFiltered ? filteredFrame : coloredFrame);
 
+            coloredFrame.release();
+            filteredFrame.release();
         }
     }
 }
